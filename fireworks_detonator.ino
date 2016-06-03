@@ -3,14 +3,33 @@ String payload = "";
 String launchCode = "BOOM";
 bool foundSMS = false;
 
+#include <SPI.h>
+
+#define SPI_SELECT()    (SPI.beginTransaction(L07))
+#define SPI_DESELECT()  (SPI.endTransaction())
+#define SPI_WRITE(data) SPI_SELECT(); SPI.transfer(data); SPI_DESELECT()
+#define RELAYSHIELD_Close_ALL() SPI_WRITE(0b01010101)
+#define RELAYSHIELD_Open_ALL()  SPI_WRITE(0b10101010)
+#define RELAYSHIELD_Close_K1()  SPI_WRITE(0b00000001)
+#define RELAYSHIELD_Open_K1()   SPI_WRITE(0b00000010)
+#define RELAYSHIELD_Close_K2()  SPI_WRITE(0b00000100)
+#define RELAYSHIELD_Open_K2()   SPI_WRITE(0b00001000)
+#define RELAYSHIELD_Close_K3()  SPI_WRITE(0b00010000)
+#define RELAYSHIELD_Open_K3()   SPI_WRITE(0b00100000)
+#define RELAYSHIELD_Close_K4()  SPI_WRITE(0b01000000)
+#define RELAYSHIELD_Open_K4()   SPI_WRITE(0b10000000)
+
 void setup() {
   SerialUSB.begin(9600);
+  Serial2.begin(9600);
   SerialCloud.begin(115200);
+  SPI.begin();
   delay(4000);
   SerialUSB.println("Remote detonator warming up....");
 
   Dash.begin();
   Dash.pulseLED(100,3000);
+  
 }
 
 void loop() {
@@ -54,6 +73,9 @@ void loop() {
 
 void launchFireworks() {
   SerialUSB.write("\n.........BOOM!!!!!!\n");
+  RELAYSHIELD_Open_ALL();
+  delay(2000);
+  RELAYSHIELD_Close_ALL();
 }
 
 bool validLaunchCode(String payload) {
