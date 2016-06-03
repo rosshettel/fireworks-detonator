@@ -24,12 +24,15 @@ void setup() {
   Serial2.begin(9600);
   SerialCloud.begin(115200);
   SPI.begin();
+  
   delay(4000);
   SerialUSB.println("Remote detonator warming up....");
 
+  //close is relay on, open is relay off
+  RELAYSHIELD_Open_ALL();
+  
   Dash.begin();
   Dash.pulseLED(100,3000);
-  
 }
 
 void loop() {
@@ -73,9 +76,9 @@ void loop() {
 
 void launchFireworks() {
   SerialUSB.write("\n.........BOOM!!!!!!\n");
-  RELAYSHIELD_Open_ALL();
-  delay(2000);
   RELAYSHIELD_Close_ALL();
+  delay(6000);
+  RELAYSHIELD_Open_ALL();
 }
 
 bool validLaunchCode(String payload) {
