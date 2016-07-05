@@ -1,7 +1,7 @@
 String tempBuffer = "";
 String payload = "";
-String launchCode = "BOOM";
 bool foundSMS = false;
+bool ledOn = false;
 
 #include <SPI.h>
 
@@ -24,13 +24,13 @@ void setup() {
   Serial2.begin(9600);
   SerialCloud.begin(115200);
   SPI.begin();
-  
+
   delay(4000);
   SerialUSB.println("Remote detonator warming up....");
 
   //close is relay on, open is relay off
   RELAYSHIELD_Open_ALL();
-  
+
   Dash.begin();
   Dash.pulseLED(100,3000);
 }
@@ -45,17 +45,15 @@ void loop() {
     if (!foundSMS) {
       if (tempBuffer == "SMSRCVD") {
         foundSMS = true;
+        ledOn = true;
       }
     } else if (currChar == '\n') {
       payload = stripOffLengthNumber(payload);
       payload.trim();
-      
-      SerialUSB.print("\nSMS received: ");
-      SerialUSB.print(payload);
 
-      if (validLaunchCode(payload)) {
-        launchFireworks();
-      }
+      Dash.pulseLED(50, 150);
+      launchFireworks(payload);
+      Dash.pulseLED(100,3000);
 
       foundSMS = false;
       payload = "";
@@ -74,18 +72,28 @@ void loop() {
   }
 }
 
-void launchFireworks() {
-  SerialUSB.write("\n.........BOOM!!!!!!\n");
-  RELAYSHIELD_Close_ALL();
-  delay(6000);
-  RELAYSHIELD_Open_ALL();
-}
+void launchFireworks(String payload) {
+    if (payload == "boom" || payload == "boom" || payload == "1") {
+      RELAYSHIELD_Close_K1();
+    } else if (payload == "red" || payload == "Red" || payload == "2") {
+      RELAYSHIELD_Close_K2();
+    } else if (payload == "white" || payload == "White" || payload == "3") {
+      RELAYSHIELD_Close_K3();
+    } else if (payload == "blue" || payload == "Blue" || payload == "4") {
+      RELAYSHIELD_Close_K4();
+    } else {
+      SerialUSB.println("Unrecognized trigger word, ignoring...");
+      return;
+    }
 
-bool validLaunchCode(String payload) {
-  return payload == launchCode;
+    
+    SerialUSB.println(".........BOOM!!!!!!");
+    delay(1000);
+    RELAYSHIELD_Open_ALL();
 }
 
 String stripOffLengthNumber(String payload) {
+    SerialUSB.println(payload);
   int index = 0;
   while(payload[index] == ',') {
     ++index;
@@ -98,4 +106,3 @@ String stripOffLengthNumber(String payload) {
   payload.remove(0, index);
   return payload;
 }
-
